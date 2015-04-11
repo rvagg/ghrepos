@@ -6,7 +6,7 @@ const jsonist = require('jsonist')
 function makeOptions (auth, options) {
   return xtend({
       headers : { 'User-Agent' : 'Magic Node.js application that does magic things' }
-    , auth    : auth.user + ':' + auth.token
+    , auth    : auth ? auth.user + ':' + auth.token : null
   }, options)
 }
 
