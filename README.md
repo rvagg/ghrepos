@@ -48,7 +48,7 @@ The auth data is compatible with [ghauth](https://github.com/rvagg/ghauth) so yo
 const ghauth     = require('ghauth')
     , ghrepos    = require('ghrepos')
     , authOptions = {
-          configName : 'team-lister'
+          configName : 'lister'
         , scopes     : [ 'user' ]
       }
 
