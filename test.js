@@ -1,81 +1,7 @@
-const http           = require('http')
-    , test           = require('tape')
-    , xtend          = require('xtend')
-    , EE             = require('events').EventEmitter
-    , bl             = require('bl')
-    , jsonist        = require('jsonist')
-    , _jsonistget    = jsonist.get
-    , _jsonistpost   = jsonist.post
-
-
-var ghrepos = require('./')
-
-function makeServer (data) {
-  var ee     = new EE()
-    , i      = 0
-    , server = http.createServer(function (req, res) {
-        ee.emit('request', req)
-
-        var _data = Array.isArray(data) ? data[i++] : data
-        res.end(JSON.stringify(_data))
-
-        if (!Array.isArray(data) || i == data.length)
-          server.close()
-      })
-      .listen(0, function (err) {
-        if (err)
-          return ee.emit('error', err)
-
-        jsonist.get = function (url, opts, callback) {
-          ee.emit('get', url, opts)
-          return _jsonistget('http://localhost:' + server.address().port, opts, callback)
-        }
-
-        ee.emit('ready')
-      })
-      .on('close', ee.emit.bind(ee, 'close'))
-
-  return ee
-}
-
-
-function toAuth (auth) {
-  return 'Basic ' + (new Buffer(auth.user + ':' + auth.token).toString('base64'))
-}
-
-
-function verifyRequest (t, auth) {
-  return function (req) {
-    t.ok(true, 'got request')
-    t.equal(req.headers['authorization'], toAuth(auth), 'got auth header')
-  }
-}
-
-
-function verifyUrl (t, urls) {
-  var i = 0
-  return function (_url) {
-    if (i == urls.length)
-      return t.fail('too many urls/requests')
-    t.equal(_url, urls[i++], 'correct url')
-  }
-}
-
-
-function verifyClose (t) {
-  return function () {
-    t.ok(true, 'got close')
-  }
-}
-
-
-function verifyData (t, data) {
-  return function (err, _data) {
-    t.notOk(err, 'no error')
-    t.ok((data === '' && _data === '') || _data, 'got data')
-    t.deepEqual(_data, data, 'got expected data')
-  }
-}
+const ghutils = require('ghutils/test')
+    , ghrepos = require('./')
+    , test    = require('tape')
+    , xtend   = require('xtend')
 
 
 test('test list repos for org/user', function (t) {
@@ -86,16 +12,16 @@ test('test list repos for org/user', function (t) {
     , testData = [ [ { test1: 'data1' }, { test2: 'data2' } ], [] ]
     , server
 
-  server = makeServer(testData)
+  server = ghutils.makeServer(testData)
     .on('ready', function () {
-      ghrepos.list(xtend(auth), org, verifyData(t, testData[0]))
+      ghrepos.list(xtend(auth), org, ghutils.verifyData(t, testData[0]))
     })
-    .on('request', verifyRequest(t, auth))
-    .on('get', verifyUrl(t, [
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
         'https://api.github.com/users/testorg/repos?page=1'
       , 'https://api.github.com/users/testorg/repos?page=2'
     ]))
-    .on('close'  , verifyClose(t))
+    .on('close'  , ghutils.verifyClose(t))
 })
 
 
@@ -109,16 +35,16 @@ test('test list repos for authed user', function (t) {
       ]
     , server
 
-  server = makeServer(testData)
+  server = ghutils.makeServer(testData)
     .on('ready', function () {
-      ghrepos.list(xtend(auth), verifyData(t, testData[0]))
+      ghrepos.list(xtend(auth), ghutils.verifyData(t, testData[0]))
     })
-    .on('request', verifyRequest(t, auth))
-    .on('get', verifyUrl(t, [
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
         'https://api.github.com/user/repos?page=1'
       , 'https://api.github.com/user/repos?page=2'
     ]))
-    .on('close'  , verifyClose(t))
+    .on('close'  , ghutils.verifyClose(t))
 })
 
 
@@ -133,17 +59,17 @@ test('test list repos for authed user with multi-page', function (t) {
       ]
     , server
 
-  server = makeServer(testData)
+  server = ghutils.makeServer(testData)
     .on('ready', function () {
-      ghrepos.list(xtend(auth), verifyData(t, testData[0].concat(testData[1])))
+      ghrepos.list(xtend(auth), ghutils.verifyData(t, testData[0].concat(testData[1])))
     })
-    .on('request', verifyRequest(t, auth))
-    .on('get', verifyUrl(t, [
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
         'https://api.github.com/user/repos?page=1'
       , 'https://api.github.com/user/repos?page=2'
       , 'https://api.github.com/user/repos?page=3'
     ]))
-    .on('close'  , verifyClose(t))
+    .on('close'  , ghutils.verifyClose(t))
 })
 
 
@@ -154,15 +80,15 @@ test('test list repos for authed user with no repos', function (t) {
     , testData = [ [] ]
     , server
 
-  server = makeServer(testData)
+  server = ghutils.makeServer(testData)
     .on('ready', function () {
-      ghrepos.list(xtend(auth), verifyData(t, []))
+      ghrepos.list(xtend(auth), ghutils.verifyData(t, []))
     })
-    .on('request', verifyRequest(t, auth))
-    .on('get', verifyUrl(t, [
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
         'https://api.github.com/user/repos?page=1'
     ]))
-    .on('close'  , verifyClose(t))
+    .on('close'  , ghutils.verifyClose(t))
 })
 
 
@@ -179,17 +105,17 @@ test('test get ref for a repo', function (t) {
       ]
     , server
 
-  server = makeServer(testData)
+  server = ghutils.makeServer(testData)
     .on('ready', function () {
-      ghrepos.listRefs(xtend(auth), org, repo, verifyData(t, testData[0].concat(testData[1])))
+      ghrepos.listRefs(xtend(auth), org, repo, ghutils.verifyData(t, testData[0].concat(testData[1])))
     })
-    .on('request', verifyRequest(t, auth))
-    .on('get', verifyUrl(t, [
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
         'https://api.github.com/repos/' + org + '/' + repo + '/git/refs?page=1'
       , 'https://api.github.com/repos/' + org + '/' + repo + '/git/refs?page=2'
       , 'https://api.github.com/repos/' + org + '/' + repo + '/git/refs?page=3'
     ]))
-    .on('close'  , verifyClose(t))
+    .on('close'  , ghutils.verifyClose(t))
 })
 
 
@@ -205,15 +131,15 @@ test('test get ref data for a ref', function (t) {
       ]
     , server
 
-  server = makeServer(testData)
+  server = ghutils.makeServer(testData)
     .on('ready', function () {
-      ghrepos.getRef(xtend(auth), org, repo, ref, verifyData(t, testData[0]))
+      ghrepos.getRef(xtend(auth), org, repo, ref, ghutils.verifyData(t, testData[0]))
     })
-    .on('request', verifyRequest(t, auth))
-    .on('get', verifyUrl(t, [
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
         'https://api.github.com/repos/' + org + '/' + repo + '/git/refs/' + ref
     ]))
-    .on('close'  , verifyClose(t))
+    .on('close'  , ghutils.verifyClose(t))
 })
 
 test('test get ref data for a ref with refs/ prefix', function (t) {
@@ -228,14 +154,14 @@ test('test get ref data for a ref with refs/ prefix', function (t) {
       ]
     , server
 
-  server = makeServer(testData)
+  server = ghutils.makeServer(testData)
     .on('ready', function () {
-      ghrepos.getRef(xtend(auth), org, repo, 'refs/' + ref, verifyData(t, testData[0]))
+      ghrepos.getRef(xtend(auth), org, repo, 'refs/' + ref, ghutils.verifyData(t, testData[0]))
     })
-    .on('request', verifyRequest(t, auth))
-    .on('get', verifyUrl(t, [
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
         'https://api.github.com/repos/' + org + '/' + repo + '/git/refs/' + ref
     ]))
-    .on('close'  , verifyClose(t))
+    .on('close'  , ghutils.verifyClose(t))
 })
 
