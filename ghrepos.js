@@ -1,6 +1,7 @@
 const jsonist = require('jsonist')
     , qs      = require('querystring')
     , xtend   = require('xtend')
+    , ghutils = require('ghutils')
 
 
 function makeOptions (auth, options) {
@@ -38,32 +39,6 @@ function ghpost (auth, url, data, options, callback) {
 }
 
 
-function lister (auth, urlbase, options, callback) {
-  var retdata = []
-    , optqs  = qs.stringify(options)
-
-  if (optqs)
-    optqs = '&' + optqs
-
-  //TODO: use 'Link' headers to improve the guesswork here
-  ;(function next (page) {
-    var url = urlbase + '?page=' + page + optqs
-
-    ghget(auth, url, options, function (err, data) {
-      if (err)
-        return callback(err)
-
-      if (!data.length)
-        return callback(null, retdata)
-
-      retdata.push.apply(retdata, data)
-
-      next(page + 1)
-    })
-  }(1))
-}
-
-
 module.exports.list = function list (auth, org, options, callback) {
   if (typeof org == 'function') { // list for this user
     callback = org
@@ -81,7 +56,7 @@ module.exports.list = function list (auth, org, options, callback) {
   else
     urlbase += '/users/' + org + '/repos'
 
-  lister(auth, urlbase, options, callback)
+  ghutils.lister(auth, urlbase, options, callback)
 }
 
 
@@ -93,7 +68,7 @@ module.exports.listRefs = function listRefs (auth, org, repo, options, callback)
 
   var urlbase = 'https://api.github.com/repos/' + org + '/' + repo + '/git/refs'
 
-  lister(auth, urlbase, options, callback)
+  ghutils.lister(auth, urlbase, options, callback)
 }
 
 
