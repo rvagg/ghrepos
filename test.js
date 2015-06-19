@@ -165,3 +165,28 @@ test('test get ref data for a ref with refs/ prefix', function (t) {
     .on('close'  , ghutils.verifyClose(t))
 })
 
+
+test('test footype repo lister', function (t) {
+  t.plan(10)
+
+  var auth     = { user: 'authuser', token: 'authtoken' }
+    , org      = 'testorg'
+    , repo     = 'testrepo'
+    , testData = [
+          [ { test3: 'data3' }, { test4: 'data4' } ]
+        , []
+      ]
+    , lister   = ghrepos.repoLister('footype')
+    , server
+
+  server = ghutils.makeServer(testData)
+    .on('ready', function () {
+      lister(xtend(auth), org, repo, ghutils.verifyData(t, testData[0].concat(testData[1])))
+    })
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
+        'https://api.github.com/repos/' + org + '/' + repo + '/footype?page=1'
+      , 'https://api.github.com/repos/' + org + '/' + repo + '/footype?page=2'
+    ]))
+    .on('close'  , ghutils.verifyClose(t))
+})
