@@ -176,7 +176,7 @@ test('test footype repo lister', function (t) {
           [ { test3: 'data3' }, { test4: 'data4' } ]
         , []
       ]
-    , lister   = ghrepos.repoLister('footype')
+    , lister   = ghrepos.createLister('footype')
     , server
 
   server = ghutils.makeServer(testData)

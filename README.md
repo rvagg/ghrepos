@@ -56,7 +56,7 @@ ghrepos.getRef(authOptions, 'nodejs', 'io.js', 'heads/v1.x', function (err, refD
 })
 ```
 
-### repoLister(type)
+### createLister(type)
 
 Creates a function that lists different sub types related to the `'/repos'` api, e.g. list `'issues'`, `'pulls'` or `'releases'`. The function returned has the signature: `function list (auth, org, repo, options, callback)`.
 

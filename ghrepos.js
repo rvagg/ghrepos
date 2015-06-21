@@ -48,7 +48,7 @@ function getRef (auth, org, repo, ref, options, callback) {
 }
 
 
-function repoLister (type) {
+function createLister (type) {
   return function list (auth, org, repo, options, callback) {
     if (typeof options == 'function') {
       callback = options
@@ -71,8 +71,8 @@ function baseUrl (org, repo) {
 }
 
 
-module.exports.list       = list
-module.exports.listRefs   = listRefs
-module.exports.getRef     = getRef
-module.exports.baseUrl    = baseUrl
-module.exports.repoLister = repoLister
+module.exports.list         = list
+module.exports.listRefs     = listRefs
+module.exports.getRef       = getRef
+module.exports.baseUrl      = baseUrl
+module.exports.createLister = createLister
