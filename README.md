@@ -13,31 +13,52 @@ See also:
 * https://github.com/rvagg/ghteams
 * https://github.com/rvagg/ghauth
 
+## API
 
-## Example usage
+### list(auth[, org][, options], callback)
+
+List all repos for a user or organization. If `org` and `options` are omitted the current user is assumed.
+
+List all repos for user `'rvagg'`:
 
 ```js
 const ghrepos     = require('ghrepos')
     , authOptions = { user: 'rvagg', token: '24d5dee258c64aef38a66c0c5eca459c379901c2' }
 
-// list all repos for a user
 ghrepos.list(authOptions, 'rvagg', function (err, repolist) {
-  // Array of repos for user 'rvagg'
   console.log(reposlist)
 })
+```
 
-// get git ref data for a given ref string
-ghrepos.getRef(authOptions, 'iojs', 'io.js', 'heads/v1.x', function (err, refData) {
-  // data containing ref information including sha and github url
-  console.log(refData)
-})
+### listRefs(auth, org, repo[, options], callback)
 
-// get git ref data for all refs in a repo
-ghrepos.listRefs(authOptions, 'iojs', 'io.js', function (err, refData) {
+Get git ref data for all refs in a repo.
+
+Get all ref data for `nodejs/io.js` repo:
+
+```js
+ghrepos.listRefs(authOptions, 'nodejs', 'io.js', function (err, refData) {
   // data containing ref information including sha and github url
   console.log(refData)
 })
 ```
+
+### getRef(auth, org, repo, ref[, options], callback)
+
+Get git ref data for a particular ref string.
+
+Get git ref data for `v1.x` branch in `nodejs/io.js` repo:
+
+```js
+ghrepos.getRef(authOptions, 'nodejs', 'io.js', 'heads/v1.x', function (err, refData) {
+  // data containing ref information including sha and github url
+  console.log(refData)
+})
+```
+
+### createLister(type)
+
+Creates a function that lists different sub types related to the `'/repos'` api, e.g. list `'issues'`, `'pulls'` or `'releases'`. The function returned has the signature: `function list (auth, org, repo, options, callback)`.
 
 _More methods coming .. as I need them or as you PR them in._
 
