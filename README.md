@@ -43,6 +43,32 @@ ghrepos.listRefs(authOptions, 'nodejs', 'io.js', function (err, refData) {
 })
 ```
 
+### listBranches(auth, org, repo[, options], callback)
+
+Get git branch for a repo.
+
+Get all branches for `nodejs/io.js` repo:
+
+```js
+ghrepos.listBranches(authOptions, 'nodejs', 'io.js', function (err, refData) {
+  // data containing branch information including sha and github API url
+  console.log(refData)
+})
+```
+
+### listTags(auth, org, repo[, options], callback)
+
+Get git tag for a repo.
+
+Get all tag for `nodejs/io.js` repo:
+
+```js
+ghrepos.listTags(authOptions, 'nodejs', 'io.js', function (err, refData) {
+  // data containing tag information including sha and github API url
+  console.log(refData)
+})
+```
+
 ### getRef(auth, org, repo, ref[, options], callback)
 
 Get git ref data for a particular ref string.
@@ -52,6 +78,19 @@ Get git ref data for `v1.x` branch in `nodejs/io.js` repo:
 ```js
 ghrepos.getRef(authOptions, 'nodejs', 'io.js', 'heads/v1.x', function (err, refData) {
   // data containing ref information including sha and github url
+  console.log(refData)
+})
+```
+
+### getBranch(auth, org, repo, branch[, options], callback)
+
+Get git branch data for a given branch name
+
+Get git branch data for `v1.x` branch in `nodejs/io.js` repo:
+
+```js
+ghrepos.getBranch(authOptions, 'nodejs', 'io.js', 'v1.x', function (err, refData) {
+  // data containing branch information including sha and github API url
   console.log(refData)
 })
 ```

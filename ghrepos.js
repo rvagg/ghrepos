@@ -23,29 +23,40 @@ function list (auth, org, options, callback) {
 }
 
 
-function listRefs (auth, org, repo, options, callback) {
-  if (typeof options == 'function') { // no options
-    callback = options
-    options  = {}
+;[ 'refs', 'tags', 'branches' ].forEach(function (type) {
+  var singular = type.replace(/e?s$/, '')
+
+  var lister = function (auth, org, repo, options, callback) {
+    if (typeof options == 'function') { // no options
+      callback = options
+      options  = {}
+    }
+
+    var url = refsBaseUrl(org, repo, type)
+    ghutils.lister(auth, url, options, callback)
   }
 
-  var url = refsBaseUrl(org, repo)
-  ghutils.lister(auth, url, options, callback)
-}
+  module.exports['list' + type[0].toUpperCase() + type.substring(1)] = lister
 
+  if (type == 'tag')
+    return
 
-function getRef (auth, org, repo, ref, options, callback) {
-  if (typeof options == 'function') {
-    callback = options
-    options  = {}
+  // no getTag API
+  var getter = function (auth, org, repo, ref, options, callback) {
+    if (typeof options == 'function') {
+      callback = options
+      options  = {}
+    }
+
+    // a valid ref but we're not using this format
+    ref = ref.replace(/^refs\//, '')
+
+    var url = refsBaseUrl(org, repo, type) + '/' + ref
+    ghutils.ghget(auth, url, options, callback)
   }
 
-  // a valid ref but we're not using this format
-  ref = ref.replace(/^refs\//, '')
-
-  var url = refsBaseUrl(org, repo) + '/' + ref
-  ghutils.ghget(auth, url, options, callback)
-}
+  module.exports['get' + singular[0].toUpperCase() + singular.substring(1)] = getter
+})
 
 
 function createLister (type) {
@@ -61,8 +72,10 @@ function createLister (type) {
 }
 
 
-function refsBaseUrl (org, repo) {
-  return baseUrl(org, repo) + '/git/refs'
+function refsBaseUrl (org, repo, type) {
+  if (type == 'refs')
+    type = 'git/' + type
+  return baseUrl(org, repo) + '/' + type
 }
 
 
@@ -72,7 +85,5 @@ function baseUrl (org, repo) {
 
 
 module.exports.list         = list
-module.exports.listRefs     = listRefs
-module.exports.getRef       = getRef
 module.exports.baseUrl      = baseUrl
 module.exports.createLister = createLister
