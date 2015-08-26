@@ -2,7 +2,17 @@ const ghutils = require('ghutils')
     , apiRoot = ghutils.apiRoot
 
 
-function list (auth, org, options, callback) {
+function listUser (auth, user, options, callback) {
+  return list (auth, 'user', user, options, callback)
+}
+
+
+function listOrg (auth, org, options, callback) {
+  return list (auth, 'org', org, options, callback)
+}
+
+
+function list (auth, type, org, options, callback) {
   if (typeof org == 'function') { // list for this user
     callback = org
     options = {}
@@ -14,10 +24,14 @@ function list (auth, org, options, callback) {
 
   var urlbase = apiRoot
 
-  if (org == null)
+  if (org == null) {
     urlbase += '/user/repos'
-  else
-    urlbase += '/users/' + org + '/repos'
+  } else {
+    if (type == 'org')
+      urlbase += '/orgs/' + org + '/repos?'
+    else
+      urlbase += '/users/' + org + '/repos?'
+  }
 
   ghutils.lister(auth, urlbase, options, callback)
 }
@@ -84,6 +98,8 @@ function baseUrl (org, repo) {
 }
 
 
-module.exports.list         = list
+module.exports.list         = require('util').deprecate(listUser, 'ghrepos.list() is deprecated, use listUser() or listOrg() instead')
+module.exports.listUser     = listUser
+module.exports.listOrg      = listOrg
 module.exports.baseUrl      = baseUrl
 module.exports.createLister = createLister
