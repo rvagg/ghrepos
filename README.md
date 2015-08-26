@@ -15,9 +15,9 @@ See also:
 
 ## API
 
-### list(auth[, org][, options], callback)
+### listUser(auth[, user][, options], callback)
 
-List all repos for a user or organization. If `org` and `options` are omitted the current user is assumed.
+List all repos for a user. If `user` and `options` are omitted the current user is assumed.
 
 List all repos for user `'rvagg'`:
 
@@ -25,7 +25,22 @@ List all repos for user `'rvagg'`:
 const ghrepos     = require('ghrepos')
     , authOptions = { user: 'rvagg', token: '24d5dee258c64aef38a66c0c5eca459c379901c2' }
 
-ghrepos.list(authOptions, 'rvagg', function (err, repolist) {
+ghrepos.listUser(authOptions, 'rvagg', function (err, repolist) {
+  console.log(reposlist)
+})
+```
+
+### listOrg(auth, org[, options], callback)
+
+List all repos for a organisation. If `org` and `options` are omitted the current org is assumed.
+
+List all repos for org `'nodejs'`:
+
+```js
+const ghrepos     = require('ghrepos')
+    , authOptions = { user: 'rvagg', token: '24d5dee258c64aef38a66c0c5eca459c379901c2' }
+
+ghrepos.listOrg(authOptions, 'nodejs', function (err, repolist) {
   console.log(reposlist)
 })
 ```
