@@ -1,6 +1,6 @@
 # ghrepos
 
-<!-- [![Build Status](https://secure.travis-ci.org/rvagg/ghrepos.png)](http://travis-ci.org/rvagg/ghrepos) -->
+[![Build Status](https://secure.travis-ci.org/rvagg/ghrepos.png)](http://travis-ci.org/rvagg/ghrepos)
 
 **A node library to interact with the GitHub repos API**
 
