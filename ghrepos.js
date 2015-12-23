@@ -98,7 +98,6 @@ function baseUrl (org, repo) {
 }
 
 
-module.exports.list         = require('util').deprecate(listUser, 'ghrepos.list() is deprecated, use listUser() or listOrg() instead')
 module.exports.listUser     = listUser
 module.exports.listOrg      = listOrg
 module.exports.baseUrl      = baseUrl

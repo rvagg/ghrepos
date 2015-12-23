@@ -4,7 +4,34 @@ const ghutils = require('ghutils/test-util')
     , xtend   = require('xtend')
 
 
-test('test list repos for org/user', function (t) {
+test('test list repos for user', function (t) {
+  t.plan(10)
+
+  var auth     = { user: 'authuser', token: 'authtoken' }
+    , user     = 'testuser'
+    , testData = [
+          {
+              response : [ { test3: 'data3' }, { test4: 'data4' } ]
+            , headers  : { link: '<https://somenexturl>; rel="next"' }
+          }
+        , []
+      ]
+    , server
+
+  server = ghutils.makeServer(testData)
+    .on('ready', function () {
+      var result = testData[0].response
+      ghrepos.listUser(xtend(auth), user, ghutils.verifyData(t, result))
+    })
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
+        'https://api.github.com/users/testuser/repos?'
+      , 'https://somenexturl'
+    ]))
+    .on('close'  , ghutils.verifyClose(t))
+})
+
+test('test list repos for org', function (t) {
   t.plan(10)
 
   var auth     = { user: 'authuser', token: 'authtoken' }
@@ -21,11 +48,11 @@ test('test list repos for org/user', function (t) {
   server = ghutils.makeServer(testData)
     .on('ready', function () {
       var result = testData[0].response
-      ghrepos.list(xtend(auth), org, ghutils.verifyData(t, result))
+      ghrepos.listOrg(xtend(auth), org, ghutils.verifyData(t, result))
     })
     .on('request', ghutils.verifyRequest(t, auth))
     .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/users/testorg/repos'
+        'https://api.github.com/orgs/testorg/repos?'
       , 'https://somenexturl'
     ]))
     .on('close'  , ghutils.verifyClose(t))
@@ -47,7 +74,7 @@ test('test list repos for authed user', function (t) {
   server = ghutils.makeServer(testData)
     .on('ready', function () {
       var result = testData[0].response
-      ghrepos.list(xtend(auth), ghutils.verifyData(t, result))
+      ghrepos.listUser(xtend(auth), ghutils.verifyData(t, result))
     })
     .on('request', ghutils.verifyRequest(t, auth))
     .on('get', ghutils.verifyUrl(t, [
@@ -78,7 +105,7 @@ test('test list repos for authed user with multi-page', function (t) {
   server = ghutils.makeServer(testData)
     .on('ready', function () {
       var result = testData[0].response.concat(testData[1].response)
-      ghrepos.list(xtend(auth), ghutils.verifyData(t, result))
+      ghrepos.listUser(xtend(auth), ghutils.verifyData(t, result))
     })
     .on('request', ghutils.verifyRequest(t, auth))
     .on('get', ghutils.verifyUrl(t, [
@@ -99,7 +126,7 @@ test('test list repos for authed user with no repos', function (t) {
 
   server = ghutils.makeServer(testData)
     .on('ready', function () {
-      ghrepos.list(xtend(auth), ghutils.verifyData(t, []))
+      ghrepos.listUser(xtend(auth), ghutils.verifyData(t, []))
     })
     .on('request', ghutils.verifyRequest(t, auth))
     .on('get', ghutils.verifyUrl(t, [
