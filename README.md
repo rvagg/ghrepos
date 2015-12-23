@@ -128,7 +128,7 @@ const ghauth     = require('ghauth')
       }
 
 ghauth(authOptions, function (err, authData) {
-  ghrepos.list(authData, 'rvagg', function (err, list) {
+  ghrepos.listUser(authData, 'rvagg', function (err, list) {
     console.log('Repos for rvagg:')
     console.log(util.inspect(list.map(function (i) { return {
         name: i.name
