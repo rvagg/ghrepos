@@ -71,6 +71,19 @@ ghrepos.listBranches(authOptions, 'nodejs', 'node', function (err, refData) {
 })
 ```
 
+### listCommits(auth, org, repo[, options], callback)
+
+List git commits for a repo.
+
+Get all commits for `nodejs/node` repo:
+
+```js
+ghrepos.listCommits(authOptions, 'nodejs', 'node', function (err, refData) {
+  // data containing commit information including sha and github API url
+  console.log(refData)
+})
+```
+
 ### listTags(auth, org, repo[, options], callback)
 
 List git tags for a repo.
@@ -106,6 +119,19 @@ Get git branch data for `v1.x` branch in `nodejs/node` repo:
 ```js
 ghrepos.getBranch(authOptions, 'nodejs', 'node', 'v1.x', function (err, refData) {
   // data containing branch information including sha and github API url
+  console.log(refData)
+})
+```
+
+### getCommit(auth, org, repo, sha1[, options], callback)
+
+Get git commit data for a given sha1
+
+Get git commit data for sha1 `75318e46b` in `nodejs/node` repo:
+
+```js
+ghrepos.getCommit(authOptions, 'nodejs', 'node', '75318e46b', function (err, refData) {
+  // data containing commit information including sha and github API url
   console.log(refData)
 })
 ```

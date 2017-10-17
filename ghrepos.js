@@ -37,7 +37,7 @@ function list (auth, type, org, options, callback) {
 }
 
 
-;[ 'refs', 'tags', 'branches' ].forEach(function (type) {
+;[ 'refs', 'tags', 'branches', 'commits' ].forEach(function (type) {
   var singular = type.replace(/e?s$/, '')
 
   var lister = function (auth, org, repo, options, callback) {
@@ -71,7 +71,6 @@ function list (auth, type, org, options, callback) {
 
   module.exports['get' + singular[0].toUpperCase() + singular.substring(1)] = getter
 })
-
 
 function createLister (type) {
   return function list (auth, org, repo, options, callback) {
