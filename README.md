@@ -136,6 +136,36 @@ ghrepos.getCommit(authOptions, 'nodejs', 'node', '75318e46b', function (err, ref
 })
 ```
 
+### getCommitComments(auth, org, repo, sha1[, options], callback)
+
+Get git commit comments data for a given sha1
+
+Get git commit comments data for sha1 `75318e46b` in `nodejs/node` repo:
+
+```js
+ghrepos.getCommitComments(authOptions, 'nodejs', 'node', '75318e46b', function (err, comments) {
+  // array containing commit comments information
+  console.log(JSON.stringify(comments.map(function (i) {
+    return { user: i.user.login, body: i.body }
+  }), null, 2))
+})
+```
+
+Yields:
+
+```json
+[
+  {
+    "user": "Trott",
+    "body": "@cjihrig There's no PR-URL on this commit message. (`core-validate-commit` FTW as usual!)"
+  },
+  {
+    "user": "mscdex",
+    "body": "PR-URL is: https://github.com/nodejs/node/pull/15745"
+  }
+]
+```
+
 ### createLister(type)
 
 Creates a function that lists different sub types related to the `'/repos'` api, e.g. list `'issues'`, `'pulls'` or `'releases'`. The function returned has the signature: `function list (auth, org, repo, options, callback)`.

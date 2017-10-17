@@ -72,6 +72,11 @@ function list (auth, type, org, options, callback) {
   module.exports['get' + singular[0].toUpperCase() + singular.substring(1)] = getter
 })
 
+function getCommitComments (auth, org, repo, sha1, options, callback) {
+  var ref = sha1 + '/comments'
+  return module.exports.getCommit(auth, org, repo, ref, options, callback)
+}
+
 function createLister (type) {
   return function list (auth, org, repo, options, callback) {
     if (typeof options == 'function') {
@@ -97,7 +102,8 @@ function baseUrl (org, repo) {
 }
 
 
-module.exports.listUser     = listUser
-module.exports.listOrg      = listOrg
-module.exports.baseUrl      = baseUrl
-module.exports.createLister = createLister
+module.exports.listUser          = listUser
+module.exports.listOrg           = listOrg
+module.exports.baseUrl           = baseUrl
+module.exports.getCommitComments = getCommitComments
+module.exports.createLister      = createLister
