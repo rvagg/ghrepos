@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "faucet": "0.0.1",
+    "ghauth": "^3.2.1",
     "tape": "~4.3.0",
     "xtend": "~4.0.0"
   }
