@@ -310,6 +310,93 @@ test('test get ref data for a ref with refs/ prefix', function (t) {
 })
 
 
+test('test list commits for authed user', function (t) {
+  t.plan(10)
+
+  var auth     = { user: 'authuser', token: 'authtoken' }
+    , org      = 'testorg'
+    , repo     = 'testrepo'
+    , testData = [
+          {
+              response : [ { test3: 'data3' }, { test4: 'data4' } ]
+            , headers  : { link: '<https://somenexturl>; rel="next"' }
+          }
+        , []
+      ]
+    , server
+
+  server = ghutils.makeServer(testData)
+    .on('ready', function () {
+      var result = testData[0].response
+      ghrepos.listCommits(xtend(auth), org, repo, ghutils.verifyData(t, result))
+    })
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
+        'https://api.github.com/repos/testorg/testrepo/commits'
+      , 'https://somenexturl'
+    ]))
+    .on('close'  , ghutils.verifyClose(t))
+})
+
+
+test('test get commit for authed user', function (t) {
+  t.plan(7)
+
+  var auth     = { user: 'authuser', token: 'authtoken' }
+    , org      = 'testorg'
+    , repo     = 'testrepo'
+    , ref      = 'aaee1122'
+    , testData = [
+          {
+              response : [ { test3: 'data3' }, { test4: 'data4' } ]
+            , headers  : { link: '<https://somenexturl>; rel="next"' }
+          }
+      ]
+    , server
+
+  server = ghutils.makeServer(testData)
+    .on('ready', function () {
+      var result = testData[0].response
+      ghrepos.getCommit(xtend(auth), org, repo, ref, ghutils.verifyData(t, result))
+    })
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
+        'https://api.github.com/repos/testorg/testrepo/commits/aaee1122'
+      , 'https://somenexturl'
+    ]))
+    .on('close'  , ghutils.verifyClose(t))
+})
+
+
+test('test get commit comments for authed user', function (t) {
+  t.plan(7)
+
+  var auth     = { user: 'authuser', token: 'authtoken' }
+    , org      = 'testorg'
+    , repo     = 'testrepo'
+    , ref      = 'aaee1122'
+    , testData = [
+          {
+              response : [ { test3: 'data3' }, { test4: 'data4' } ]
+            , headers  : { link: '<https://somenexturl>; rel="next"' }
+          }
+      ]
+    , server
+
+  server = ghutils.makeServer(testData)
+    .on('ready', function () {
+      var result = testData[0].response
+      ghrepos.getCommitComments(xtend(auth), org, repo, ref, ghutils.verifyData(t, result))
+    })
+    .on('request', ghutils.verifyRequest(t, auth))
+    .on('get', ghutils.verifyUrl(t, [
+        'https://api.github.com/repos/testorg/testrepo/commits/aaee1122/comments'
+      , 'https://somenexturl'
+    ]))
+    .on('close'  , ghutils.verifyClose(t))
+})
+
+
 test('test footype repo lister', function (t) {
   t.plan(10)
 

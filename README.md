@@ -49,10 +49,10 @@ ghrepos.listOrg(authOptions, 'nodejs', function (err, repolist) {
 
 Get git ref data for all refs in a repo.
 
-Get all ref data for `nodejs/io.js` repo:
+Get all ref data for `nodejs/node` repo:
 
 ```js
-ghrepos.listRefs(authOptions, 'nodejs', 'io.js', function (err, refData) {
+ghrepos.listRefs(authOptions, 'nodejs', 'node', function (err, refData) {
   // data containing ref information including sha and github url
   console.log(refData)
 })
@@ -60,25 +60,38 @@ ghrepos.listRefs(authOptions, 'nodejs', 'io.js', function (err, refData) {
 
 ### listBranches(auth, org, repo[, options], callback)
 
-Get git branch for a repo.
+List git branches for a repo.
 
-Get all branches for `nodejs/io.js` repo:
+Get all branches for `nodejs/node` repo:
 
 ```js
-ghrepos.listBranches(authOptions, 'nodejs', 'io.js', function (err, refData) {
+ghrepos.listBranches(authOptions, 'nodejs', 'node', function (err, refData) {
   // data containing branch information including sha and github API url
+  console.log(refData)
+})
+```
+
+### listCommits(auth, org, repo[, options], callback)
+
+List git commits for a repo.
+
+Get all commits for `nodejs/node` repo:
+
+```js
+ghrepos.listCommits(authOptions, 'nodejs', 'node', function (err, refData) {
+  // data containing commit information including sha and github API url
   console.log(refData)
 })
 ```
 
 ### listTags(auth, org, repo[, options], callback)
 
-Get git tag for a repo.
+List git tags for a repo.
 
-Get all tag for `nodejs/io.js` repo:
+Get all tag for `nodejs/node` repo:
 
 ```js
-ghrepos.listTags(authOptions, 'nodejs', 'io.js', function (err, refData) {
+ghrepos.listTags(authOptions, 'nodejs', 'node', function (err, refData) {
   // data containing tag information including sha and github API url
   console.log(refData)
 })
@@ -88,10 +101,10 @@ ghrepos.listTags(authOptions, 'nodejs', 'io.js', function (err, refData) {
 
 Get git ref data for a particular ref string.
 
-Get git ref data for `v1.x` branch in `nodejs/io.js` repo:
+Get git ref data for `v1.x` branch in `nodejs/node` repo:
 
 ```js
-ghrepos.getRef(authOptions, 'nodejs', 'io.js', 'heads/v1.x', function (err, refData) {
+ghrepos.getRef(authOptions, 'nodejs', 'node', 'heads/v1.x', function (err, refData) {
   // data containing ref information including sha and github url
   console.log(refData)
 })
@@ -101,13 +114,56 @@ ghrepos.getRef(authOptions, 'nodejs', 'io.js', 'heads/v1.x', function (err, refD
 
 Get git branch data for a given branch name
 
-Get git branch data for `v1.x` branch in `nodejs/io.js` repo:
+Get git branch data for `v1.x` branch in `nodejs/node` repo:
 
 ```js
-ghrepos.getBranch(authOptions, 'nodejs', 'io.js', 'v1.x', function (err, refData) {
+ghrepos.getBranch(authOptions, 'nodejs', 'node', 'v1.x', function (err, refData) {
   // data containing branch information including sha and github API url
   console.log(refData)
 })
+```
+
+### getCommit(auth, org, repo, sha1[, options], callback)
+
+Get git commit data for a given sha1
+
+Get git commit data for sha1 `75318e46b` in `nodejs/node` repo:
+
+```js
+ghrepos.getCommit(authOptions, 'nodejs', 'node', '75318e46b', function (err, refData) {
+  // data containing commit information including sha and github API url
+  console.log(refData)
+})
+```
+
+### getCommitComments(auth, org, repo, sha1[, options], callback)
+
+Get git commit comments data for a given sha1
+
+Get git commit comments data for sha1 `75318e46b` in `nodejs/node` repo:
+
+```js
+ghrepos.getCommitComments(authOptions, 'nodejs', 'node', '75318e46b', function (err, comments) {
+  // array containing commit comments information
+  console.log(JSON.stringify(comments.map(function (i) {
+    return { user: i.user.login, body: i.body }
+  }), null, 2))
+})
+```
+
+Yields:
+
+```json
+[
+  {
+    "user": "Trott",
+    "body": "@cjihrig There's no PR-URL on this commit message. (`core-validate-commit` FTW as usual!)"
+  },
+  {
+    "user": "mscdex",
+    "body": "PR-URL is: https://github.com/nodejs/node/pull/15745"
+  }
+]
 ```
 
 ### createLister(type)
