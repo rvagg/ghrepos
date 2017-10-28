@@ -1,6 +1,6 @@
 {
   "name": "ghrepos",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Interact with the GitHub repos API",
   "main": "ghrepos.js",
   "scripts": {
