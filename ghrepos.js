@@ -1,109 +1,72 @@
-const ghutils = require('ghutils')
-    , apiRoot = ghutils.apiRoot
+import { apiRoot, ghget, lister } from 'ghutils'
 
+const defaultApiUrl = apiRoot
 
-function listUser (auth, user, options, callback) {
-  return list (auth, 'user', user, options, callback)
+export function baseUrl (org, repo, options = {}) {
+  const api = options._apiUrl || defaultApiUrl
+  return `${api}/repos/${org}/${repo}`
 }
 
-
-function listOrg (auth, org, options, callback) {
-  return list (auth, 'org', org, options, callback)
+export async function listUser (auth, user, options = {}) {
+  const api = options._apiUrl || defaultApiUrl
+  const url = user ? `${api}/users/${user}/repos` : `${api}/user/repos`
+  return lister(auth, url, options)
 }
 
-
-function list (auth, type, org, options, callback) {
-  if (typeof org == 'function') { // list for this user
-    callback = org
-    options = {}
-    org = null
-  } else if (typeof options == 'function') { // no options
-    callback = options
-    options  = {}
-  }
-
-  var urlbase = apiRoot
-
-  if (org == null) {
-    urlbase += '/user/repos'
-  } else {
-    if (type == 'org')
-      urlbase += '/orgs/' + org + '/repos?'
-    else
-      urlbase += '/users/' + org + '/repos?'
-  }
-
-  ghutils.lister(auth, urlbase, options, callback)
+export async function listOrg (auth, org, options = {}) {
+  const api = options._apiUrl || defaultApiUrl
+  const url = `${api}/orgs/${org}/repos`
+  return lister(auth, url, options)
 }
 
-
-;[ 'refs', 'tags', 'branches', 'commits' ].forEach(function (type) {
-  var singular = type.replace(/e?s$/, '')
-
-  var lister = function (auth, org, repo, options, callback) {
-    if (typeof options == 'function') { // no options
-      callback = options
-      options  = {}
-    }
-
-    var url = refsBaseUrl(org, repo, type)
-    ghutils.lister(auth, url, options, callback)
-  }
-
-  module.exports['list' + type[0].toUpperCase() + type.substring(1)] = lister
-
-  if (type == 'tag')
-    return
-
-  // no getTag API
-  var getter = function (auth, org, repo, ref, options, callback) {
-    if (typeof options == 'function') {
-      callback = options
-      options  = {}
-    }
-
-    // a valid ref but we're not using this format
-    ref = ref.replace(/^refs\//, '')
-
-    var url = refsBaseUrl(org, repo, type) + '/' + ref
-    ghutils.ghget(auth, url, options, callback)
-  }
-
-  module.exports['get' + singular[0].toUpperCase() + singular.substring(1)] = getter
-})
-
-function getCommitComments (auth, org, repo, sha1, options, callback) {
-  var ref = sha1 + '/comments'
-  return module.exports.getCommit(auth, org, repo, ref, options, callback)
+export async function listRefs (auth, org, repo, options = {}) {
+  const url = baseUrl(org, repo, options) + '/git/refs'
+  return lister(auth, url, options)
 }
 
-function createLister (type) {
-  return function list (auth, org, repo, options, callback) {
-    if (typeof options == 'function') {
-      callback = options
-      options  = {}
-    }
+export async function listTags (auth, org, repo, options = {}) {
+  const url = baseUrl(org, repo, options) + '/tags'
+  return lister(auth, url, options)
+}
 
-    var url = baseUrl(org, repo) + '/' + type
-    ghutils.lister(auth, url, options, callback)
+export async function listBranches (auth, org, repo, options = {}) {
+  const url = baseUrl(org, repo, options) + '/branches'
+  return lister(auth, url, options)
+}
+
+export async function listCommits (auth, org, repo, options = {}) {
+  const url = baseUrl(org, repo, options) + '/commits'
+  return lister(auth, url, options)
+}
+
+export async function getRef (auth, org, repo, ref, options = {}) {
+  ref = ref.replace(/^refs\//, '')
+  const url = baseUrl(org, repo, options) + '/git/refs/' + ref
+  const { data } = await ghget(auth, url, options)
+  return data
+}
+
+export async function getBranch (auth, org, repo, branch, options = {}) {
+  const url = baseUrl(org, repo, options) + '/branches/' + branch
+  const { data } = await ghget(auth, url, options)
+  return data
+}
+
+export async function getCommit (auth, org, repo, sha, options = {}) {
+  const url = baseUrl(org, repo, options) + '/commits/' + sha
+  const { data } = await ghget(auth, url, options)
+  return data
+}
+
+export async function getCommitComments (auth, org, repo, sha, options = {}) {
+  const url = baseUrl(org, repo, options) + '/commits/' + sha + '/comments'
+  const { data } = await ghget(auth, url, options)
+  return data
+}
+
+export function createLister (type) {
+  return async function (auth, org, repo, options = {}) {
+    const url = baseUrl(org, repo, options) + '/' + type
+    return lister(auth, url, options)
   }
 }
-
-
-function refsBaseUrl (org, repo, type) {
-  if (type == 'refs')
-    type = 'git/' + type
-  return baseUrl(org, repo) + '/' + type
-}
-
-
-function baseUrl (org, repo) {
-  return apiRoot + '/repos/' + org + '/' + repo
-}
-
-
-module.exports.listUser          = listUser
-module.exports.listOrg           = listOrg
-module.exports.baseUrl           = baseUrl
-module.exports.getCommitComments = getCommitComments
-module.exports.createLister      = createLister

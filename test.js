@@ -1,427 +1,252 @@
-const ghutils = require('ghutils/test-util')
-    , ghrepos = require('./')
-    , test    = require('tape')
-    , xtend   = require('xtend')
+import { test } from 'node:test'
+import assert from 'node:assert'
+import { createMockServer, createMockServerWithHandler } from 'ghutils/test-util'
+import * as ghrepos from './ghrepos.js'
 
+test('list repos for user', async () => {
+  const auth = { token: 'test-token' }
+  const testData = [{ id: 1, name: 'repo1' }, { id: 2, name: 'repo2' }]
 
-test('test list repos for user', function (t) {
-  t.plan(10)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , user     = 'testuser'
-    , testData = [
-          {
-              response : [ { test3: 'data3' }, { test4: 'data4' } ]
-            , headers  : { link: '<https://somenexturl>; rel="next"' }
-          }
-        , []
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      var result = testData[0].response
-      ghrepos.listUser(xtend(auth), user, ghutils.verifyData(t, result))
+  const server = await createMockServer({ response: testData })
+  try {
+    const results = await ghrepos.listUser(auth, 'testuser', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/users/testuser/repos?'
-      , 'https://somenexturl'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(results, testData)
+    assert.ok(server.requests[0].url.includes('/users/testuser/repos'))
+    assert.strictEqual(server.requests[0].headers.authorization, 'Bearer test-token')
+  } finally {
+    await server.close()
+  }
 })
 
-test('test list repos for org', function (t) {
-  t.plan(10)
+test('list repos for authed user (no user arg)', async () => {
+  const auth = { token: 'test-token' }
+  const testData = [{ id: 1, name: 'repo1' }]
 
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , org      = 'testorg'
-    , testData = [
-          {
-              response : [ { test3: 'data3' }, { test4: 'data4' } ]
-            , headers  : { link: '<https://somenexturl>; rel="next"' }
-          }
-        , []
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      var result = testData[0].response
-      ghrepos.listOrg(xtend(auth), org, ghutils.verifyData(t, result))
+  const server = await createMockServer({ response: testData })
+  try {
+    const results = await ghrepos.listUser(auth, null, {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/orgs/testorg/repos?'
-      , 'https://somenexturl'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(results, testData)
+    assert.ok(server.requests[0].url.includes('/user/repos'))
+  } finally {
+    await server.close()
+  }
 })
 
-test('test list repos for authed user', function (t) {
-  t.plan(10)
+test('list repos for org', async () => {
+  const auth = { token: 'test-token' }
+  const testData = [{ id: 1, name: 'repo1' }]
 
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , testData = [
-          {
-              response : [ { test3: 'data3' }, { test4: 'data4' } ]
-            , headers  : { link: '<https://somenexturl>; rel="next"' }
-          }
-        , []
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      var result = testData[0].response
-      ghrepos.listUser(xtend(auth), ghutils.verifyData(t, result))
+  const server = await createMockServer({ response: testData })
+  try {
+    const results = await ghrepos.listOrg(auth, 'testorg', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/user/repos'
-      , 'https://somenexturl'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(results, testData)
+    assert.ok(server.requests[0].url.includes('/orgs/testorg/repos'))
+  } finally {
+    await server.close()
+  }
 })
 
+test('list repos with pagination', async () => {
+  const auth = { token: 'test-token' }
+  const page1 = [{ id: 1 }, { id: 2 }]
+  const page2 = [{ id: 3 }, { id: 4 }]
 
-test('test list repos for authed user with multi-page', function (t) {
-  t.plan(13)
+  let requestCount = 0
+  const mock = await createMockServerWithHandler((req, res) => {
+    requestCount++
+    const port = mock.address().port
+    if (requestCount === 1) {
+      res.setHeader('link', `<http://127.0.0.1:${port}/page2>; rel="next"`)
+      res.end(JSON.stringify(page1))
+    } else {
+      res.end(JSON.stringify(page2))
+    }
+  })
 
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , testData = [
-          {
-              response : [ { test3: 'data3' }, { test4: 'data4' } ]
-            , headers  : { link: '<https://somenexturl>; rel="next"' }
-          }
-        , {
-              response : [ { test5: 'data5' }, { test6: 'data6' } ]
-            , headers  : { link: '<https://somenexturl2>; rel="next"' }
-          }
-        , []
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      var result = testData[0].response.concat(testData[1].response)
-      ghrepos.listUser(xtend(auth), ghutils.verifyData(t, result))
+  try {
+    const results = await ghrepos.listUser(auth, 'testuser', {
+      _apiUrl: mock.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/user/repos'
-      , 'https://somenexturl'
-      , 'https://somenexturl2'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(results, [...page1, ...page2])
+    assert.strictEqual(requestCount, 2)
+  } finally {
+    await mock.close()
+  }
 })
 
+test('list refs', async () => {
+  const auth = { token: 'test-token' }
+  const refs = [{ ref: 'refs/heads/main' }, { ref: 'refs/tags/v1' }]
 
-test('test list repos for authed user with no repos', function (t) {
-  t.plan(7)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , testData = [ [] ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      ghrepos.listUser(xtend(auth), ghutils.verifyData(t, []))
+  const server = await createMockServer({ response: refs })
+  try {
+    const results = await ghrepos.listRefs(auth, 'testorg', 'testrepo', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/user/repos'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(results, refs)
+    assert.ok(server.requests[0].url.includes('/repos/testorg/testrepo/git/refs'))
+  } finally {
+    await server.close()
+  }
 })
 
+test('list tags', async () => {
+  const auth = { token: 'test-token' }
+  const tags = [{ name: 'v1.0.0' }, { name: 'v2.0.0' }]
 
-test('test get ref list for a repo', function (t) {
-  t.plan(13)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , org      = 'testorg'
-    , repo     = 'testrepo'
-    , testData = [
-          {
-              response : [ { test3: 'data3' }, { test4: 'data4' } ]
-            , headers  : { link: '<https://somenexturl>; rel="next"' }
-          }
-        , {
-              response : [ { test5: 'data5' }, { test6: 'data6' } ]
-            , headers  : { link: '<https://somenexturl2>; rel="next"' }
-          }
-        , []
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      var result = testData[0].response.concat(testData[1].response)
-      ghrepos.listRefs(xtend(auth), org, repo, ghutils.verifyData(t, result))
+  const server = await createMockServer({ response: tags })
+  try {
+    const results = await ghrepos.listTags(auth, 'testorg', 'testrepo', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/repos/' + org + '/' + repo + '/git/refs'
-      , 'https://somenexturl'
-      , 'https://somenexturl2'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(results, tags)
+    assert.ok(server.requests[0].url.includes('/repos/testorg/testrepo/tags'))
+  } finally {
+    await server.close()
+  }
 })
 
+test('list branches', async () => {
+  const auth = { token: 'test-token' }
+  const branches = [{ name: 'main' }, { name: 'dev' }]
 
-test('test get branch list for a repo', function (t) {
-  t.plan(13)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , org      = 'testorg'
-    , repo     = 'testrepo'
-    , testData = [
-          {
-              response : [ { test3: 'data3' }, { test4: 'data4' } ]
-            , headers  : { link: '<https://somenexturl>; rel="next"' }
-          }
-        , {
-              response : [ { test5: 'data5' }, { test6: 'data6' } ]
-            , headers  : { link: '<https://somenexturl2>; rel="next"' }
-          }
-        , []
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      var result = testData[0].response.concat(testData[1].response)
-      ghrepos.listBranches(xtend(auth), org, repo, ghutils.verifyData(t, result))
+  const server = await createMockServer({ response: branches })
+  try {
+    const results = await ghrepos.listBranches(auth, 'testorg', 'testrepo', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/repos/' + org + '/' + repo + '/branches'
-      , 'https://somenexturl'
-      , 'https://somenexturl2'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(results, branches)
+    assert.ok(server.requests[0].url.includes('/repos/testorg/testrepo/branches'))
+  } finally {
+    await server.close()
+  }
 })
 
+test('list commits', async () => {
+  const auth = { token: 'test-token' }
+  const commits = [{ sha: 'abc123' }, { sha: 'def456' }]
 
-test('test get tag list for a repo', function (t) {
-  t.plan(13)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , org      = 'testorg'
-    , repo     = 'testrepo'
-    , testData = [
-          {
-              response : [ { test3: 'data3' }, { test4: 'data4' } ]
-            , headers  : { link: '<https://somenexturl>; rel="next"' }
-          }
-        , {
-              response : [ { test5: 'data5' }, { test6: 'data6' } ]
-            , headers  : { link: '<https://somenexturl2>; rel="next"' }
-          }
-        , []
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      var result = testData[0].response.concat(testData[1].response)
-      ghrepos.listTags(xtend(auth), org, repo, ghutils.verifyData(t, result))
+  const server = await createMockServer({ response: commits })
+  try {
+    const results = await ghrepos.listCommits(auth, 'testorg', 'testrepo', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/repos/' + org + '/' + repo + '/tags'
-      , 'https://somenexturl'
-      , 'https://somenexturl2'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(results, commits)
+    assert.ok(server.requests[0].url.includes('/repos/testorg/testrepo/commits'))
+  } finally {
+    await server.close()
+  }
 })
 
+test('get ref', async () => {
+  const auth = { token: 'test-token' }
+  const refData = { ref: 'refs/heads/main', object: { sha: 'abc123' } }
 
-test('test get ref data for a ref', function (t) {
-  t.plan(7)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , org      = 'testorg'
-    , repo     = 'testrepo'
-    , ref      = 'head/testref'
-    , testData = [
-          { test3: 'data3' }
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      ghrepos.getRef(xtend(auth), org, repo, ref, ghutils.verifyData(t, testData[0]))
+  const server = await createMockServer({ response: refData })
+  try {
+    const result = await ghrepos.getRef(auth, 'testorg', 'testrepo', 'heads/main', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/repos/' + org + '/' + repo + '/git/refs/' + ref
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(result, refData)
+    assert.ok(server.requests[0].url.includes('/repos/testorg/testrepo/git/refs/heads/main'))
+  } finally {
+    await server.close()
+  }
 })
 
+test('get ref strips refs/ prefix', async () => {
+  const auth = { token: 'test-token' }
+  const refData = { ref: 'refs/heads/main' }
 
-test('test get branch data for a branch', function (t) {
-  t.plan(7)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , org      = 'testorg'
-    , repo     = 'testrepo'
-    , branch   = 'testbranch'
-    , testData = [
-          { test3: 'data3' }
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      ghrepos.getBranch(xtend(auth), org, repo, branch, ghutils.verifyData(t, testData[0]))
+  const server = await createMockServer({ response: refData })
+  try {
+    await ghrepos.getRef(auth, 'testorg', 'testrepo', 'refs/heads/main', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/repos/' + org + '/' + repo + '/branches/' + branch
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.ok(server.requests[0].url.includes('/git/refs/heads/main'))
+    assert.ok(!server.requests[0].url.includes('/git/refs/refs/'))
+  } finally {
+    await server.close()
+  }
 })
 
+test('get branch', async () => {
+  const auth = { token: 'test-token' }
+  const branchData = { name: 'main', commit: { sha: 'abc123' } }
 
-test('test get ref data for a ref with refs/ prefix', function (t) {
-  t.plan(7)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , org      = 'testorg'
-    , repo     = 'testrepo'
-    , ref      = 'head/testref'
-    , testData = [
-          { test3: 'data3' }
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      ghrepos.getRef(xtend(auth), org, repo, 'refs/' + ref, ghutils.verifyData(t, testData[0]))
+  const server = await createMockServer({ response: branchData })
+  try {
+    const result = await ghrepos.getBranch(auth, 'testorg', 'testrepo', 'main', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/repos/' + org + '/' + repo + '/git/refs/' + ref
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(result, branchData)
+    assert.ok(server.requests[0].url.includes('/repos/testorg/testrepo/branches/main'))
+  } finally {
+    await server.close()
+  }
 })
 
+test('get commit', async () => {
+  const auth = { token: 'test-token' }
+  const commitData = { sha: 'abc123', author: { login: 'testuser' } }
 
-test('test list commits for authed user', function (t) {
-  t.plan(10)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , org      = 'testorg'
-    , repo     = 'testrepo'
-    , testData = [
-          {
-              response : [ { test3: 'data3' }, { test4: 'data4' } ]
-            , headers  : { link: '<https://somenexturl>; rel="next"' }
-          }
-        , []
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      var result = testData[0].response
-      ghrepos.listCommits(xtend(auth), org, repo, ghutils.verifyData(t, result))
+  const server = await createMockServer({ response: commitData })
+  try {
+    const result = await ghrepos.getCommit(auth, 'testorg', 'testrepo', 'abc123', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/repos/testorg/testrepo/commits'
-      , 'https://somenexturl'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(result, commitData)
+    assert.ok(server.requests[0].url.includes('/repos/testorg/testrepo/commits/abc123'))
+  } finally {
+    await server.close()
+  }
 })
 
+test('get commit comments', async () => {
+  const auth = { token: 'test-token' }
+  const comments = [{ id: 1, body: 'nice' }]
 
-test('test get commit for authed user', function (t) {
-  t.plan(7)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , org      = 'testorg'
-    , repo     = 'testrepo'
-    , ref      = 'aaee1122'
-    , testData = [
-          {
-              response : [ { test3: 'data3' }, { test4: 'data4' } ]
-            , headers  : { link: '<https://somenexturl>; rel="next"' }
-          }
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      var result = testData[0].response
-      ghrepos.getCommit(xtend(auth), org, repo, ref, ghutils.verifyData(t, result))
+  const server = await createMockServer({ response: comments })
+  try {
+    const result = await ghrepos.getCommitComments(auth, 'testorg', 'testrepo', 'abc123', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/repos/testorg/testrepo/commits/aaee1122'
-      , 'https://somenexturl'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(result, comments)
+    assert.ok(server.requests[0].url.includes('/repos/testorg/testrepo/commits/abc123/comments'))
+  } finally {
+    await server.close()
+  }
 })
 
+test('createLister produces working lister', async () => {
+  const auth = { token: 'test-token' }
+  const data = [{ id: 1 }, { id: 2 }]
+  const customLister = ghrepos.createLister('footype')
 
-test('test get commit comments for authed user', function (t) {
-  t.plan(7)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , org      = 'testorg'
-    , repo     = 'testrepo'
-    , ref      = 'aaee1122'
-    , testData = [
-          {
-              response : [ { test3: 'data3' }, { test4: 'data4' } ]
-            , headers  : { link: '<https://somenexturl>; rel="next"' }
-          }
-      ]
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      var result = testData[0].response
-      ghrepos.getCommitComments(xtend(auth), org, repo, ref, ghutils.verifyData(t, result))
+  const server = await createMockServer({ response: data })
+  try {
+    const results = await customLister(auth, 'testorg', 'testrepo', {
+      _apiUrl: server.baseUrl
     })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/repos/testorg/testrepo/commits/aaee1122/comments'
-      , 'https://somenexturl'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+    assert.deepStrictEqual(results, data)
+    assert.ok(server.requests[0].url.includes('/repos/testorg/testrepo/footype'))
+  } finally {
+    await server.close()
+  }
 })
 
+test('baseUrl returns correct URL', () => {
+  const url = ghrepos.baseUrl('myorg', 'myrepo')
+  assert.strictEqual(url, 'https://api.github.com/repos/myorg/myrepo')
+})
 
-test('test footype repo lister', function (t) {
-  t.plan(10)
-
-  var auth     = { user: 'authuser', token: 'authtoken' }
-    , org      = 'testorg'
-    , repo     = 'testrepo'
-    , testData = [
-          {
-              response : [ { test3: 'data3' }, { test4: 'data4' } ]
-            , headers  : { link: '<https://somenexturl>; rel="next"' }
-          }
-        , []
-      ]
-    , lister   = ghrepos.createLister('footype')
-    , server
-
-  server = ghutils.makeServer(testData)
-    .on('ready', function () {
-      var result = testData[0].response
-      lister(xtend(auth), org, repo, ghutils.verifyData(t, result))
-    })
-    .on('request', ghutils.verifyRequest(t, auth))
-    .on('get', ghutils.verifyUrl(t, [
-        'https://api.github.com/repos/' + org + '/' + repo + '/footype'
-      , 'https://somenexturl'
-    ]))
-    .on('close'  , ghutils.verifyClose(t))
+test('baseUrl respects _apiUrl option', () => {
+  const url = ghrepos.baseUrl('myorg', 'myrepo', { _apiUrl: 'http://localhost:3000' })
+  assert.strictEqual(url, 'http://localhost:3000/repos/myorg/myrepo')
 })
