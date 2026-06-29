@@ -1,3 +1,9 @@
+## [3.0.5](https://github.com/rvagg/ghrepos/compare/v3.0.4...v3.0.5) (2026-06-29)
+
+### Trivial Changes
+
+* **deps:** bump actions/checkout from 6.0.3 to 7.0.0 ([#12](https://github.com/rvagg/ghrepos/issues/12)) ([acc989f](https://github.com/rvagg/ghrepos/commit/acc989fe2773c49aa27d13018b95565d60f46806))
+
 ## [3.0.4](https://github.com/rvagg/ghrepos/compare/v3.0.3...v3.0.4) (2026-06-22)
 
 ### Trivial Changes
