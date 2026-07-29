@@ -1,3 +1,5 @@
+## [3.0.10](https://github.com/rvagg/ghrepos/compare/v3.0.9...v3.0.10) (2026-07-29)
+
 ## [3.0.9](https://github.com/rvagg/ghrepos/compare/v3.0.8...v3.0.9) (2026-07-29)
 
 ## [3.0.8](https://github.com/rvagg/ghrepos/compare/v3.0.7...v3.0.8) (2026-07-29)
