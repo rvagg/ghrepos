@@ -1,3 +1,9 @@
+## [3.0.11](https://github.com/rvagg/ghrepos/compare/v3.0.10...v3.0.11) (2026-07-30)
+
+### Trivial Changes
+
+* downgrade broken changelog maker, backfill entries ([#20](https://github.com/rvagg/ghrepos/issues/20)) ([5e3bb26](https://github.com/rvagg/ghrepos/commit/5e3bb26f97a1bfc84cb804b364c7b213f4a27e15))
+
 ## [3.0.10](https://github.com/rvagg/ghrepos/compare/v3.0.9...v3.0.10) (2026-07-29)
 
 ### Trivial Changes
