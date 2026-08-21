@@ -1,3 +1,9 @@
+## [3.0.14](https://github.com/rvagg/ghrepos/compare/v3.0.13...v3.0.14) (2026-08-21)
+
+### Reverts
+
+* Revert "chore(deps-dev): bump conventional-changelog-conventionalcommits ([#21](https://github.com/rvagg/ghrepos/issues/21))" ([#23](https://github.com/rvagg/ghrepos/issues/23)) ([b82afc9](https://github.com/rvagg/ghrepos/commit/b82afc92ba5f09efa2129e8b1c73300be0ed6322))
+
 ## [3.0.13](https://github.com/rvagg/ghrepos/compare/v3.0.12...v3.0.13) (2026-08-05)
 
 ## [3.0.12](https://github.com/rvagg/ghrepos/compare/v3.0.11...v3.0.12) (2026-08-03)
