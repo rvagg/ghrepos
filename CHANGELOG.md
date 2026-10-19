@@ -1,3 +1,9 @@
+## [3.0.15](https://github.com/rvagg/ghrepos/compare/v3.0.14...v3.0.15) (2026-10-19)
+
+### Trivial Changes
+
+* **deps:** bump actions/setup-node ([#26](https://github.com/rvagg/ghrepos/issues/26)) ([0beaa14](https://github.com/rvagg/ghrepos/commit/0beaa140e8d453bd1228b86d67379462f1c80d98))
+
 ## [3.0.14](https://github.com/rvagg/ghrepos/compare/v3.0.13...v3.0.14) (2026-08-21)
 
 ### Reverts
