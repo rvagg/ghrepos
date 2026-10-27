@@ -1,6 +1,6 @@
 {
   "name": "ghrepos",
-  "version": "3.0.15",
+  "version": "3.0.16",
   "description": "Interact with the GitHub repos API",
   "type": "module",
   "exports": "./ghrepos.js",
