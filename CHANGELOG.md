@@ -1,3 +1,9 @@
+## [3.0.17](https://github.com/rvagg/ghrepos/compare/v3.0.16...v3.0.17) (2026-11-03)
+
+### Trivial Changes
+
+* **deps:** bump the github-actions-minor-patch group with 2 updates ([#29](https://github.com/rvagg/ghrepos/issues/29)) ([7ee0bd0](https://github.com/rvagg/ghrepos/commit/7ee0bd096ff3e060bbe478e9b5d0064a82e5c7ed))
+
 ## [3.0.16](https://github.com/rvagg/ghrepos/compare/v3.0.15...v3.0.16) (2026-10-27)
 
 ### Trivial Changes
